@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Gremlin</title>
+  <link rel="stylesheet" href="fonts/fonts.css"/>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="splashScreen">
+  <div id="splashInner">
+    <div id="splashLogo">Gremlin</div>
+    <div id="splashSub">Noise Floor Analysis</div>
+    <canvas id="splashCanvas"></canvas>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div id="hdr-logo">Gremlin</div>
+  <div id="hdr-sub">Noise Floor Analysis</div>
+  <div class="hdr-spacer"></div>
+  <button id="btnTheme" onclick="THEME.toggle()">DARK</button>
+</div>
+
+<!-- LAYOUT -->
+<div id="layout">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+
+    <div class="sb-section">
+      <div class="sb-label">Site</div>
+      <input id="inpSite" class="sb-inp" type="text" placeholder="e.g. KD185" spellcheck="false" autocomplete="off"/>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">SSH Credentials</div>
+      <div class="sb-creds">
+        <input id="inpHost" class="sb-inp" type="text" placeholder="10.255.160.2" spellcheck="false"/>
+        <input id="inpUser" class="sb-inp" type="text" placeholder="aatia" spellcheck="false"/>
+      </div>
+      <input id="inpPass" class="sb-inp" type="password" placeholder="password" style="margin-top:6px"/>
+    </div>
+
+    <button id="btnRun" onclick="runFetch()">▶ Run Check</button>
+
+    <div class="sb-progress" id="sbProgress">
+      <div class="sb-progress-bar" id="sbProgressBar"></div>
+    </div>
+    <div class="sb-status" id="sbStatus"></div>
+
+    <div class="sb-section" style="margin-top:20px;">
+      <div class="sb-label">History</div>
+      <div id="histList"><div class="sb-hist-empty">No runs yet</div></div>
+    </div>
+
+  </div>
+  <!-- /SIDEBAR -->
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- loading overlay -->
+    <div id="loadingOverlay" style="display:none;">
+      <div class="lo-spinner"></div>
+      <div class="lo-msg" id="loMsg">Connecting to AMOS…</div>
+      <div class="lo-sub">Noise floor + ROP trend — this takes about a minute</div>
+    </div>
+
+    <!-- empty state -->
+    <div id="emptyState">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M3 9h18M9 21V9"/>
+        <circle cx="6" cy="6" r=".5" fill="currentColor"/>
+        <circle cx="10" cy="6" r=".5" fill="currentColor"/>
+      </svg>
+      <p>Enter a site name and run</p>
+      <small>Runs noise floor check and ROP trend analysis.<br/>Results appear here — takes ~2 min.</small>
+    </div>
+
+    <!-- site header -->
+    <div id="siteHeader">
+      <div id="siteName"></div>
+      <div id="siteTimestamp"></div>
+    </div>
+
+    <!-- summary cards -->
+    <div id="summarySection">
+      <div class="section-label-row">
+        <div class="section-label">Average UL Interference (snapshot)</div>
+        <button class="btn-help" onclick="showHelp('cards')">?</button>
+      </div>
+      <div id="summaryCards"></div>
+    </div>
+
+    <!-- PRB chart -->
+    <div id="chartSection">
+      <div class="chart-wrap">
+        <div class="chart-title">
+          <span class="chart-title-text">Interference per PRB (snapshot)</span>
+          <button class="btn-help" onclick="showHelp('prb')">?</button>
+        </div>
+        <canvas id="prbChart"></canvas>
+      </div>
+    </div>
+
+    <!-- PMR 206 time-series -->
+    <div id="pmrSection">
+      <div class="section-label">
+        ROP Trend
+        <span id="pmrDateLabel" style="font-weight:400;color:var(--txt3);margin-left:8px;text-transform:none;letter-spacing:0;font-size:11px;"></span>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">
+          <span class="chart-title-text">UL Interference Power over time <span style="font-weight:400;color:var(--txt3);">— solid: PUSCH &nbsp; dashed: PUCCH</span></span>
+          <button class="btn-help" onclick="showHelp('intf')">?</button>
+        </div>
+        <canvas id="intfChart"></canvas>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">
+          <span class="chart-title-text">UL Quality — HARQ BLER & DTX Rate <span style="font-weight:400;color:var(--txt3);">— solid: BLER &nbsp; dashed: DTX%</span></span>
+          <button class="btn-help" onclick="showHelp('qual')">?</button>
+        </div>
+        <canvas id="qualChart"></canvas>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">
+          <span class="chart-title-text">SINR — Signal quality through the noise <span style="font-weight:400;color:var(--txt3);">higher is better &nbsp;·&nbsp; below 0 dB = UEs struggling</span></span>
+          <button class="btn-help" onclick="showHelp('sinr')">?</button>
+        </div>
+        <canvas id="sinrChart"></canvas>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">
+          <span class="chart-title-text">UL Load — PRB usage % <span style="font-weight:400;color:var(--txt3);">high load + high interference = worse conditions</span></span>
+          <button class="btn-help" onclick="showHelp('load')">?</button>
+        </div>
+        <canvas id="loadChart"></canvas>
+      </div>
+    </div>
+
+    <!-- raw output -->
+    <div id="rawSection">
+      <button class="raw-toggle" id="rawToggleBtn" onclick="toggleRaw()">▸ Show raw output</button>
+      <pre id="rawPre" style="display:none;"></pre>
+    </div>
+
+  </div>
+  <!-- /MAIN -->
+
+</div>
+
+<!-- SVG filter for notebook checkbox hand-drawn effect -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <filter id="handDrawnNoise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Help modal -->
+<div id="helpOverlay" onclick="if(event.target===this)closeHelp()">
+  <div id="helpBox">
+    <button id="helpClose" onclick="closeHelp()">✕</button>
+    <h3 id="helpTitle"></h3>
+    <div id="helpBody"></div>
+  </div>
+</div>
+
+<script src="js/splash.js"></script>
+<script src="../lib/chart.umd.min.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
