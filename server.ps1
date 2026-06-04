@@ -72,7 +72,7 @@ while ($listener.IsListening) {
                 # NF.mos runs lt all itself.
                 # After NF.mos, run pmr → choose report 206 → x to exit pmr menu.
                 # Unix LF only — PTY icrnl translates \r to \n, making \r\n become double-\n
-                $amosCmds = "amos $site`nrun NF.mos`npmr`n206`nx`nq`nexit`n"
+                $amosCmds = "amos $site`nrun NF.mos`nst cell`nget . earfcn`nget . bandwidth`nget . crsgain`nue print -admitted`npmr`n206`nx`nq`nexit`n"
 
                 $rand    = [IO.Path]::GetRandomFileName() -replace '\.[^.]+$',''
                 $tmpDir  = [IO.Path]::GetTempPath()
@@ -129,8 +129,8 @@ while ($listener.IsListening) {
                 try { [IO.File]::Delete($tmpDone) } catch {}
                 try { [IO.File]::Delete($tmpCmds) } catch {}
 
-                $outEscaped = $stdout -replace '\\','\\' -replace '"','\"' -replace "`r`n",'\n' -replace "`n",'\n' -replace "`r",'\n'
-                $okJson  = '{"ok":true,"site":"' + $site + '","output":"' + $outEscaped + '"}'
+                $okObj  = [PSCustomObject]@{ ok = $true; site = $site; output = $stdout }
+                $okJson = $okObj | ConvertTo-Json -Compress -Depth 3
                 $okBytes = [Text.Encoding]::UTF8.GetBytes($okJson)
                 $res.StatusCode = 200; $res.ContentLength64 = $okBytes.Length
                 $res.OutputStream.Write($okBytes, 0, $okBytes.Length)

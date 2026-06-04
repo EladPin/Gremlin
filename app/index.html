@@ -32,37 +32,78 @@
   <!-- SIDEBAR -->
   <div id="sidebar">
 
-    <div class="sb-section">
-      <div class="sb-label">Site</div>
-      <input id="inpSite" class="sb-inp" type="text" placeholder="e.g. KD185" spellcheck="false" autocomplete="off"/>
-    </div>
+    <button id="btnSbToggle" onclick="toggleSidebar()" title="Collapse sidebar">‹</button>
 
-    <div class="sb-section">
-      <div class="sb-label">SSH Credentials</div>
-      <div class="sb-creds">
-        <input id="inpHost" class="sb-inp" type="text" placeholder="10.255.160.2" spellcheck="false"/>
-        <input id="inpUser" class="sb-inp" type="text" placeholder="aatia" spellcheck="false"/>
+    <div class="sb-collapsible">
+
+      <div class="sb-section">
+        <div class="site-inp-wrap">
+          <div class="site-term-card" onclick="_focusSiteInp()">
+            <div class="site-term-wrap">
+              <div class="site-term-head">
+                <div class="site-term-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                  </svg>
+                  site
+                </div>
+                <button class="site-add-btn" id="btnAddSite" title="Add site to list" onclick="event.stopPropagation();_toggleAddSite()">+</button>
+              </div>
+              <div class="site-term-body">
+                <div class="site-term-pre" id="siteCmdRow">
+                  <code class="site-term-ps1">~&nbsp;$&nbsp;</code>
+                  <div class="site-term-cmd" id="siteCmdGhost" data-cmd="KD185"></div>
+                  <input id="inpSite" class="site-term-real" type="text" spellcheck="false" autocomplete="off"/>
+                </div>
+                <div class="site-add-row" id="siteAddRow">
+                  <div class="site-add-top">
+                    <code class="site-term-ps1">+&nbsp;</code>
+                    <input id="inpNewSite" class="site-add-inp" type="text" placeholder="new site…" spellcheck="false" autocomplete="off"/>
+                    <button class="site-add-confirm" onclick="_confirmAddSite()">↵</button>
+                  </div>
+                  <div id="siteCustomList" class="site-custom-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="siteDropdown" class="site-dropdown"></div>
+        </div>
       </div>
-      <input id="inpPass" class="sb-inp" type="password" placeholder="password" style="margin-top:6px"/>
-    </div>
 
-    <button id="btnRun" onclick="runFetch()">▶ Run Check</button>
+      <div class="sb-section">
+        <div class="sb-label">SSH Credentials</div>
+        <div class="sb-creds">
+          <input id="inpHost" class="sb-inp" type="text" placeholder="10.255.160.2" spellcheck="false"/>
+          <input id="inpUser" class="sb-inp" type="text" placeholder="aatia" spellcheck="false"/>
+        </div>
+        <input id="inpPass" class="sb-inp" type="password" placeholder="password" style="margin-top:6px"/>
+      </div>
 
-    <div class="sb-progress" id="sbProgress">
-      <div class="sb-progress-bar" id="sbProgressBar"></div>
-    </div>
-    <div class="sb-status" id="sbStatus"></div>
+      <button id="btnRun" onclick="runFetch()">▶ Run Check</button>
 
-    <div class="sb-section" style="margin-top:20px;">
-      <div class="sb-label">History</div>
-      <div id="histList"><div class="sb-hist-empty">No runs yet</div></div>
-    </div>
+      <div class="sb-progress" id="sbProgress">
+        <div class="sb-progress-bar" id="sbProgressBar"></div>
+      </div>
+      <div class="sb-status" id="sbStatus"></div>
 
+      <div class="sb-section" style="margin-top:20px;">
+        <div class="sb-label">History</div>
+        <div id="histList"><div class="sb-hist-empty">No runs yet</div></div>
+      </div>
+
+    </div><!-- /sb-collapsible -->
   </div>
   <!-- /SIDEBAR -->
 
   <!-- MAIN -->
   <div id="main">
+
+    <!-- comparison banner -->
+    <div id="cmpBanner" style="display:none">
+      <span class="cmp-icon">⇄</span>
+      <span id="cmpBannerText"></span>
+      <button class="cmp-clear" onclick="clearCompare()">✕ Clear</button>
+    </div>
 
     <!-- loading overlay -->
     <div id="loadingOverlay" style="display:none;">
@@ -86,7 +127,24 @@
     <!-- site header -->
     <div id="siteHeader">
       <div id="siteName"></div>
+      <button id="btnExport" onclick="exportReport()" style="display:none">↓ Export</button>
+      <button id="btnSiteInfo" onclick="showSiteInfo()" style="display:none">
+        <div class="si-term-header">
+          <span class="si-term-title">info</span>
+          <div class="si-term-controls">
+            <span class="si-ctrl si-close"></span>
+            <span class="si-ctrl si-minimize"></span>
+            <span class="si-ctrl si-maximize"></span>
+          </div>
+        </div>
+        <span class="si-text">Site Info</span>
+      </button>
       <div id="siteTimestamp"></div>
+    </div>
+
+    <!-- investigation notes -->
+    <div id="notesSection" style="display:none">
+      <textarea id="notesInput" placeholder="Investigation notes…" rows="2" oninput="saveNotes()" onblur="saveNotes()"></textarea>
     </div>
 
     <!-- summary cards -->
@@ -98,11 +156,15 @@
       <div id="summaryCards"></div>
     </div>
 
+    <!-- Auto diagnosis -->
+    <div id="diagnosisSection" style="display:none;margin-bottom:28px;"></div>
+
     <!-- PRB chart -->
     <div id="chartSection">
       <div class="chart-wrap">
         <div class="chart-title">
           <span class="chart-title-text">Interference per PRB (snapshot)</span>
+          <button class="btn-raw-term" onclick="showRawTerminal()" title="View raw AMOS output">&gt;_</button>
           <button class="btn-help" onclick="showHelp('prb')">?</button>
         </div>
         <canvas id="prbChart"></canvas>
@@ -111,9 +173,12 @@
 
     <!-- PMR 206 time-series -->
     <div id="pmrSection">
-      <div class="section-label">
-        ROP Trend
-        <span id="pmrDateLabel" style="font-weight:400;color:var(--txt3);margin-left:8px;text-transform:none;letter-spacing:0;font-size:11px;"></span>
+      <div class="section-label-row">
+        <div class="section-label">
+          ROP Trend
+          <span id="pmrDateLabel" style="font-weight:400;color:var(--txt3);text-transform:none;letter-spacing:0;font-size:11px;"></span>
+        </div>
+        <button id="btn900" class="btn-900" onclick="toggle900()">900 MHz ✓</button>
       </div>
 
       <div class="chart-wrap">
@@ -142,10 +207,34 @@
 
       <div class="chart-wrap">
         <div class="chart-title">
-          <span class="chart-title-text">UL Load — PRB usage % <span style="font-weight:400;color:var(--txt3);">high load + high interference = worse conditions</span></span>
+          <span class="chart-title-text">UL / DL Load — PRB usage % <span style="font-weight:400;color:var(--txt3);">solid: UL &nbsp;·&nbsp; dashed: DL</span></span>
           <button class="btn-help" onclick="showHelp('load')">?</button>
         </div>
         <canvas id="loadChart"></canvas>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">
+          <span class="chart-title-text">RRC Setup Success Rate <span style="font-weight:400;color:var(--txt3);">below 95% = accessibility issue</span></span>
+          <button class="btn-help" onclick="showHelp('rrc')">?</button>
+        </div>
+        <canvas id="rrcChart"></canvas>
+      </div>
+
+      <div id="availWrap" class="chart-wrap" style="display:none">
+        <div class="chart-title">
+          <span class="chart-title-text">Cell Availability <span style="font-weight:400;color:var(--txt3);">downtime minutes per ROP &nbsp;·&nbsp; 0 = always up</span></span>
+          <button class="btn-help" onclick="showHelp('avail')">?</button>
+        </div>
+        <canvas id="availChart"></canvas>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">
+          <span class="chart-title-text">DL TX Rank Distribution <span style="font-weight:400;color:var(--txt3);">solid: Rank 1 (SISO) &nbsp;·&nbsp; dashed: Rank 2 (MIMO)</span></span>
+          <button class="btn-help" onclick="showHelp('rank')">?</button>
+        </div>
+        <canvas id="rankChart"></canvas>
       </div>
     </div>
 
@@ -160,12 +249,16 @@
 
 </div>
 
-<!-- SVG filter for notebook checkbox hand-drawn effect -->
+<!-- SVG filters -->
 <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
   <defs>
     <filter id="handDrawnNoise">
       <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" result="noise"/>
       <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="handDrawnNoise2">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="G" yChannelSelector="R"/>
     </filter>
   </defs>
 </svg>
@@ -179,10 +272,38 @@
   </div>
 </div>
 
+<!-- Site info modal -->
+<div id="siteInfoOverlay" onclick="if(event.target===this)closeSiteInfo()">
+  <div id="siteInfoBox">
+    <button id="siteInfoClose" onclick="closeSiteInfo()">✕</button>
+    <h3 id="siteInfoTitle">Site Information</h3>
+    <div id="siteInfoBody"></div>
+  </div>
+</div>
+
+<!-- Raw AMOS terminal modal -->
+<div id="rawTermOverlay" onclick="if(event.target===this)closeRawTerminal()">
+  <div class="rt-container">
+    <div class="rt-toolbar">
+      <div class="rt-butt">
+        <button class="rt-btn rt-btn-red"    onclick="closeRawTerminal()"></button>
+        <button class="rt-btn rt-btn-yellow"></button>
+        <button class="rt-btn rt-btn-green"></button>
+      </div>
+      <span class="rt-toolbar-title" id="rtTitle">AMOS — MO Shell</span>
+      <div style="width:60px"></div>
+    </div>
+    <div class="rt-body" id="rtBody">
+      <div class="rt-empty">No run data yet.</div>
+    </div>
+  </div>
+</div>
+
 <script src="js/splash.js"></script>
 <script src="../lib/chart.umd.min.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/parser.js"></script>
+<script src="js/sites.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
