@@ -145,6 +145,133 @@ while ($listener.IsListening) {
         }
         # ─────────────────────────────────────────────────────────────────────
 
+        # ── POST /enm/amos — launch interactive AMOS terminal in CMD window ──
+        if ($path -eq 'enm/amos' -and $req.HttpMethod -eq 'POST') {
+            $res.ContentType = 'application/json'
+            $res.Headers.Add('Access-Control-Allow-Origin', '*')
+            try {
+                $body    = (New-Object IO.StreamReader $req.InputStream).ReadToEnd()
+                $payload = $body | ConvertFrom-Json
+                $sshHost = if ($payload.host) { $payload.host } else { '10.255.160.2' }
+                $sshUser = if ($payload.user) { $payload.user } else { 'zira' }
+                $sshPass = $payload.pass
+                $site    = $payload.site
+
+                $plink = Find-Plink
+                if (-not $plink) {
+                    $errJson  = '{"ok":false,"error":"plink.exe not found."}'
+                    $errBytes = [Text.Encoding]::UTF8.GetBytes($errJson)
+                    $res.StatusCode = 500; $res.ContentLength64 = $errBytes.Length
+                    $res.OutputStream.Write($errBytes, 0, $errBytes.Length)
+                    $res.OutputStream.Close(); continue
+                }
+
+                # BAT file: no -batch, no stdin redirect — fully interactive PTY
+                $rand   = [IO.Path]::GetRandomFileName() -replace '\.[^.]+$',''
+                $tmpBat = Join-Path ([IO.Path]::GetTempPath()) "gremlin_amos_$rand.bat"
+                $bat    = "@echo off`r`n"
+                $bat   += "title GREMLIN AMOS -- $site`r`n"
+                $bat   += "color 0A`r`n"
+                $bat   += "`"$plink`" -ssh -t -pw `"$sshPass`" -l `"$sshUser`" `"$sshHost`" `"amos $site`"`r`n"
+                $bat   += "del `"%~f0`" 2>nul`r`n"
+                [IO.File]::WriteAllText($tmpBat, $bat, [Text.Encoding]::ASCII)
+
+                $cmdArgs = '/C ""{0}""' -f $tmpBat
+                Start-Process -FilePath 'cmd.exe' -ArgumentList $cmdArgs -WindowStyle Normal
+
+                $okBytes = [Text.Encoding]::UTF8.GetBytes('{"ok":true}')
+                $res.StatusCode = 200; $res.ContentLength64 = $okBytes.Length
+                $res.OutputStream.Write($okBytes, 0, $okBytes.Length)
+            } catch {
+                $errJson  = '{"ok":false,"error":"' + ($_.Exception.Message -replace '"','\"') + '"}'
+                $errBytes = [Text.Encoding]::UTF8.GetBytes($errJson)
+                $res.StatusCode = 500; $res.ContentLength64 = $errBytes.Length
+                $res.OutputStream.Write($errBytes, 0, $errBytes.Length)
+            }
+            try { $res.OutputStream.Close() } catch {}
+            continue
+        }
+        # ─────────────────────────────────────────────────────────────────────
+
+        # ── POST /enm/macro — site-check commands in visible CMD window ────────
+        # Same visible-window pattern as nfmos: plink runs in -batch mode piping
+        # commands via stdin; CMD window shows "Running…" then dumps output.
+        # Returns {ok:true} immediately after launching — does not wait.
+        if ($path -eq 'enm/macro' -and $req.HttpMethod -eq 'POST') {
+            $res.ContentType = 'application/json'
+            $res.Headers.Add('Access-Control-Allow-Origin', '*')
+            try {
+                $body    = (New-Object IO.StreamReader $req.InputStream).ReadToEnd()
+                $payload = $body | ConvertFrom-Json
+                $sshHost = if ($payload.host) { $payload.host } else { '10.255.160.2' }
+                $sshUser = if ($payload.user) { $payload.user } else { 'zira' }
+                $sshPass = $payload.pass
+                $site    = $payload.site
+                $cmds    = @($payload.cmds)
+
+                $plink = Find-Plink
+                if (-not $plink) {
+                    $errJson  = '{"ok":false,"error":"plink.exe not found."}'
+                    $errBytes = [Text.Encoding]::UTF8.GetBytes($errJson)
+                    $res.StatusCode = 500; $res.ContentLength64 = $errBytes.Length
+                    $res.OutputStream.Write($errBytes, 0, $errBytes.Length)
+                    $res.OutputStream.Close(); continue
+                }
+
+                # Build AMOS command sequence — Unix LF only (PTY icrnl)
+                $lines    = @("amos $site") + $cmds + @("q", "exit")
+                $amosCmds = ($lines -join "`n") + "`n"
+
+                $rand    = [IO.Path]::GetRandomFileName() -replace '\.[^.]+$',''
+                $tmpDir  = [IO.Path]::GetTempPath()
+                $tmpCmds = Join-Path $tmpDir "gremlin_mc_$rand.txt"
+                $tmpOut  = Join-Path $tmpDir "gremlin_mo_$rand.txt"
+                $tmpBat  = Join-Path $tmpDir "gremlin_mb_$rand.bat"
+
+                [IO.File]::WriteAllText($tmpCmds, $amosCmds, [Text.Encoding]::ASCII)
+
+                # Visible CMD window: shows banner → runs plink → dumps output → waits
+                $bat  = "@echo off`r`n"
+                $bat += "title GREMLIN Site Check -- $site`r`n"
+                $bat += "color 0A`r`n"
+                $bat += "echo ====================================`r`n"
+                $bat += "echo  GREMLIN - Site Check`r`n"
+                $bat += "echo  Site: $site`r`n"
+                $bat += "echo ====================================`r`n"
+                $bat += "echo.`r`n"
+                $bat += "echo  Running AMOS commands... please wait`r`n"
+                $bat += "echo.`r`n"
+                $bat += "`"$plink`" -ssh -t -batch -pw `"$sshPass`" -l `"$sshUser`" `"$sshHost`" < `"$tmpCmds`" > `"$tmpOut`" 2>&1`r`n"
+                $bat += "cls`r`n"
+                $bat += "type `"$tmpOut`"`r`n"
+                $bat += "echo.`r`n"
+                $bat += "echo ====================================`r`n"
+                $bat += "echo  Done - press any key to close`r`n"
+                $bat += "echo ====================================`r`n"
+                $bat += "pause >nul`r`n"
+                $bat += "del `"$tmpCmds`" 2>nul`r`n"
+                $bat += "del `"$tmpOut`" 2>nul`r`n"
+                $bat += "del `"%~f0`" 2>nul`r`n"
+                [IO.File]::WriteAllText($tmpBat, $bat, [Text.Encoding]::ASCII)
+
+                # Launch visible window and return immediately (don't wait)
+                $cmdArgs = '/C ""{0}""' -f $tmpBat
+                Start-Process -FilePath 'cmd.exe' -ArgumentList $cmdArgs -WindowStyle Normal
+
+                $okBytes = [Text.Encoding]::UTF8.GetBytes('{"ok":true}')
+                $res.StatusCode = 200; $res.ContentLength64 = $okBytes.Length
+                $res.OutputStream.Write($okBytes, 0, $okBytes.Length)
+            } catch {
+                $errJson  = '{"ok":false,"error":"' + ($_.Exception.Message -replace '"','\"') + '"}'
+                $errBytes = [Text.Encoding]::UTF8.GetBytes($errJson)
+                $res.StatusCode = 500; $res.ContentLength64 = $errBytes.Length
+                $res.OutputStream.Write($errBytes, 0, $errBytes.Length)
+            }
+            try { $res.OutputStream.Close() } catch {}
+            continue
+        }
+        # ─────────────────────────────────────────────────────────────────────
+
         # ── Static file server ────────────────────────────────────────────────
         $file = Join-Path $root ($path.Replace('/', [IO.Path]::DirectorySeparatorChar))
         if ([IO.Directory]::Exists($file)) { $file = Join-Path $file 'index.html' }

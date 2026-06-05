@@ -9,6 +9,180 @@
 </head>
 <body>
 
+<!-- MODE SELECT ─────────────────────────────────────────────── -->
+<div id="modeSelect" style="display:none">
+  <div class="ms-center">
+    <div class="ms-logo">Gremlin</div>
+    <div class="ms-sub">AMOS NOISE FLOOR ANALYZER</div>
+    <div class="ms-prompt">SELECT OPERATION MODE</div>
+    <div class="ms-cards">
+
+      <!-- RF card -->
+      <div class="ms-card">
+        <div class="ms-card-tag">RF</div>
+        <div class="ms-card-title">RF Routine</div>
+        <div class="ms-card-desc">Noise floor analysis · ROP trends ·<br>Site diagnostics</div>
+        <div class="ms-pass-row">
+          <span class="ms-ps1">$</span>
+          <input type="password" class="ms-pass-inp" id="msPassRf" placeholder="password" autocomplete="off">
+          <button class="ms-enter" onclick="msEnter('rf')">→</button>
+        </div>
+        <div class="ms-err" id="msErrRf"></div>
+      </div>
+
+      <!-- Zira card -->
+      <div class="ms-card">
+        <div class="ms-card-tag">ZIRA</div>
+        <div class="ms-card-title">Zira Routine</div>
+        <div class="ms-card-desc">ENM topology browser · Site monitoring<br>· Data review</div>
+        <div class="ms-pass-row">
+          <span class="ms-ps1">$</span>
+          <input type="password" class="ms-pass-inp" id="msPassZira" placeholder="password" autocomplete="off">
+          <button class="ms-enter" onclick="msEnter('zira')">→</button>
+        </div>
+        <div class="ms-err" id="msErrZira"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ZIRA MODE ────────────────────────────────────────────────── -->
+<div id="ziraMode" style="display:none">
+
+  <!-- ENM top nav -->
+  <div class="enm-nav">
+    <div class="enm-nav-l">
+      <div class="enm-e">E</div>
+      <span class="enm-brand">Ericsson Network Manager</span>
+    </div>
+    <div class="enm-nav-r">
+      <span class="enm-chip">enm01</span>
+      <span class="enm-chip" id="enmClock">00:00 (GMT+3)</span>
+      <span class="enm-chip">? Help</span>
+      <span class="enm-chip">zira</span>
+      <button class="enm-nav-btn" id="enmThemeBtn"
+              onclick="THEME.toggle();enmSyncTheme()">DARK</button>
+      <button class="enm-nav-btn enm-mode-btn" onclick="msShow()">&#9776; Mode</button>
+    </div>
+  </div>
+
+  <!-- Breadcrumb bar -->
+  <div class="enm-bread">
+    <span class="enm-bread-link">Ericsson Network Manager</span>
+    <span class="enm-bread-sep">/</span>
+    <span>Topology Browser</span>
+  </div>
+
+  <!-- Body: tree + actions -->
+  <div class="enm-body">
+
+    <!-- Left: topology browser -->
+    <div class="enm-left">
+      <div class="enm-tree-hdr">
+        <h2 class="enm-tree-h2">Topology Browser</h2>
+        <div class="enm-tree-btns">
+          <button class="enm-tbtn">Search for an Object</button>
+          <button class="enm-tbtn">Browse to FDN</button>
+          <button class="enm-tbtn">+ Add Command</button>
+        </div>
+      </div>
+      <div class="enm-toolbar">
+        <div class="enm-toolbar-l">
+          <select class="enm-sel-net"><option>Network Data</option></select>
+          <span class="enm-sel-count">| Selected (0)</span>
+        </div>
+        <button class="enm-refresh-btn" title="Refresh">&#8635;</button>
+      </div>
+      <div class="enm-tree" id="enmTree"></div>
+    </div>
+
+    <!-- Right: actions panel -->
+    <div class="enm-right">
+      <div class="enm-act-hdr">Actions</div>
+
+      <div class="enm-field">
+        <div class="enm-field-lbl">HOST</div>
+        <input type="text" class="enm-field-inp" id="enmHost" placeholder="10.255.160.2"
+               spellcheck="false">
+      </div>
+
+      <div class="enm-field">
+        <div class="enm-field-lbl">AMOS USER</div>
+        <input type="text" class="enm-field-inp" id="enmUser" placeholder="zira"
+               spellcheck="false" autocomplete="off">
+      </div>
+
+      <div class="enm-field">
+        <div class="enm-field-lbl">AMOS PASSWORD</div>
+        <input type="password" class="enm-field-inp" id="enmPass">
+      </div>
+
+      <button class="enm-save-btn" id="enmSaveBtn" onclick="enmSave()">Save</button>
+
+      <div class="enm-field-lbl" style="margin-top:8px">SELECTED SITE</div>
+      <div class="enm-sel-val" id="enmSelSite">—</div>
+
+      <button class="enm-amos-btn" onclick="enmOpenAmos()">Run AMOS</button>
+
+      <div class="enm-cmds-row">
+        <span class="enm-field-lbl">SITE CHECK COMMANDS</span>
+        <button class="enm-add-btn" onclick="enmOpenAddCmd()">+ Add</button>
+      </div>
+      <div class="enm-selall-row">
+        <button class="enm-selall-btn" onclick="enmSelectAll()">Select all</button>
+        <span class="enm-selall-sep">·</span>
+        <button class="enm-selall-btn" onclick="enmDeselectAll()">Deselect all</button>
+      </div>
+
+      <div class="enm-cmd-list" id="enmCmdList"></div>
+
+      <button class="enm-run-btn" onclick="enmRunCheck()">Run Site Check</button>
+
+      <div class="enm-status" id="enmStatus" style="display:none"></div>
+    </div>
+
+  </div><!-- /enm-body -->
+
+  <!-- Macro output overlay -->
+  <div id="enmMacroOverlay" onclick="if(event.target===this)enmCloseMacro()">
+    <div class="enm-macro-box">
+      <div class="enm-macro-hdr">
+        <div class="enm-macro-dots">
+          <span class="enm-mac-dot enm-mac-red"   onclick="enmCloseMacro()"></span>
+          <span class="enm-mac-dot enm-mac-ylw"></span>
+          <span class="enm-mac-dot enm-mac-grn"></span>
+        </div>
+        <span class="enm-macro-title">AMOS — <span id="enmMacroSite"></span></span>
+        <div style="width:60px"></div>
+      </div>
+      <pre class="enm-macro-out" id="enmMacroOutput"></pre>
+    </div>
+  </div>
+
+  <!-- Add command dialog -->
+  <div id="slcAddDialog" onclick="if(event.target===this)enmCloseAddCmd()">
+    <div class="enm-dlg">
+      <div class="enm-dlg-hdr">Add Site Check Command</div>
+      <div class="enm-field">
+        <div class="enm-field-lbl">COMMAND NAME</div>
+        <input type="text" class="enm-field-inp" id="slcAddName"
+               placeholder="e.g. Cell Status" autocomplete="off">
+      </div>
+      <div class="enm-field">
+        <div class="enm-field-lbl">AMOS COMMAND</div>
+        <input type="text" class="enm-field-inp" id="slcAddCmd"
+               placeholder="e.g. st cell" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="enm-dlg-btns">
+        <button class="enm-dlg-cancel" onclick="enmCloseAddCmd()">Cancel</button>
+        <button class="enm-dlg-ok"     onclick="enmConfirmAddCmd()">Add</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /ziraMode -->
+
 <!-- LOADING SCREEN -->
 <div id="splashScreen">
   <div id="splashInner">
@@ -23,6 +197,7 @@
   <div id="hdr-logo">Gremlin</div>
   <div id="hdr-sub">Noise Floor Analysis</div>
   <div class="hdr-spacer"></div>
+  <button id="btnMode" onclick="msShow()">&#9776; Mode</button>
   <button id="btnTheme" onclick="THEME.toggle()">DARK</button>
 </div>
 
@@ -305,5 +480,7 @@
 <script src="js/parser.js"></script>
 <script src="js/sites.js"></script>
 <script src="js/app.js"></script>
+<script src="js/modeselect.js"></script>
+<script src="js/zira.js"></script>
 </body>
 </html>

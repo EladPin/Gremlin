@@ -156,6 +156,19 @@ html,body{
   padding-left:20px;
 }
 .hdr-spacer{flex:1;}
+#btnMode{
+  background:none;
+  border:1px solid var(--brd2);
+  border-radius:var(--radius-btn);
+  color:var(--txt3);
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.04em;
+  padding:6px 14px;
+  cursor:pointer;
+  margin-right:6px;
+}
+#btnMode:hover{background:var(--brd3);color:var(--txt);}
 #btnTheme{
   background:none;
   border:1px solid var(--brd);
@@ -1374,3 +1387,515 @@ html.light .sum-card{
 .si-badge-ok {background:rgba(42,122,59,.1); color:var(--grn);}
 .si-badge-err{background:rgba(176,34,0,.08); color:var(--red);}
 .si-badge-dim{background:var(--brd3);        color:var(--txt3);}
+
+/* ══════════════════════════════════════════════════════════════
+   MODE SELECT SCREEN
+   Full-screen dark overlay shown after splash. Two password cards.
+══════════════════════════════════════════════════════════════ */
+
+#modeSelect{
+  position:fixed;inset:0;z-index:8000;
+  background:#0b0b0b;
+  display:flex;
+  align-items:center;justify-content:center;
+}
+
+.ms-center{
+  display:flex;flex-direction:column;align-items:center;
+}
+
+.ms-logo{
+  font-family:var(--logo);
+  font-size:52px;
+  color:#f0ede9;
+  letter-spacing:0;
+  line-height:1;
+  margin-bottom:8px;
+}
+
+.ms-sub{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.18em;
+  color:rgba(255,255,255,0.28);
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+
+.ms-prompt{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.12em;
+  color:rgba(255,255,255,0.16);
+  text-transform:uppercase;
+  margin-bottom:44px;
+}
+
+.ms-cards{
+  display:flex;
+  gap:20px;
+  align-items:flex-start;
+}
+
+.ms-card{
+  width:310px;
+  background:#161616;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:14px;
+  padding:24px 24px 20px;
+  display:flex;flex-direction:column;
+}
+
+.ms-card-tag{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:0.14em;
+  color:rgba(255,255,255,0.28);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.ms-card-title{
+  font-family:var(--serif);
+  font-size:28px;
+  color:#f0ede9;
+  font-weight:400;
+  line-height:1.1;
+  margin-bottom:10px;
+}
+
+.ms-card-desc{
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:rgba(255,255,255,0.34);
+  line-height:1.6;
+  margin-bottom:22px;
+}
+
+.ms-pass-row{
+  display:flex;align-items:center;gap:6px;
+  background:#0d0d0d;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:6px;
+  padding:8px 10px;
+}
+
+.ms-ps1{
+  font-family:var(--mono);font-size:12px;
+  color:rgba(255,255,255,0.24);flex-shrink:0;
+}
+
+.ms-pass-inp{
+  flex:1;min-width:0;
+  background:transparent;border:none;outline:none;
+  font-family:var(--mono);font-size:12px;
+  color:rgba(255,255,255,0.72);
+}
+.ms-pass-inp::placeholder{color:rgba(255,255,255,0.18);}
+
+.ms-enter{
+  background:transparent;border:none;cursor:pointer;
+  font-size:16px;color:rgba(255,255,255,0.28);
+  padding:0 2px;line-height:1;flex-shrink:0;
+  transition:color .15s ease;
+}
+.ms-enter:hover{color:rgba(255,255,255,0.72);}
+
+.ms-err{
+  font-family:var(--mono);font-size:11px;
+  color:#e05050;margin-top:8px;min-height:14px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ZIRA / ENM MODE
+   All colors are fixed hex — not CSS custom properties — so the
+   Gremlin dark/light toggle has no visual effect on the ENM UI.
+══════════════════════════════════════════════════════════════ */
+
+#ziraMode{
+  position:fixed;inset:0;z-index:7000;
+  display:flex;flex-direction:column;
+  background:#ffffff;
+}
+
+/* ENM top nav bar */
+.enm-nav{
+  height:48px;
+  background:#0e1824;
+  display:flex;align-items:center;
+  padding:0 14px;gap:10px;
+  flex-shrink:0;
+}
+.enm-nav-l{display:flex;align-items:center;gap:8px;}
+.enm-e{
+  width:26px;height:26px;border-radius:50%;
+  background:#0082f0;
+  color:#fff;
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:13px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.enm-brand{
+  color:#ffffff;
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:13px;letter-spacing:0;white-space:nowrap;
+}
+.enm-nav-r{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.enm-chip{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;color:#9bb2c8;
+  padding:3px 8px;border-radius:4px;
+  background:rgba(255,255,255,0.06);white-space:nowrap;
+}
+.enm-nav-btn{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;color:#9bb2c8;
+  padding:3px 10px;border-radius:4px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  cursor:pointer;white-space:nowrap;
+}
+.enm-nav-btn:hover{background:rgba(255,255,255,0.14);color:#fff;}
+.enm-mode-btn{color:#fff;background:rgba(255,255,255,0.12);}
+
+/* Breadcrumb bar */
+.enm-bread{
+  height:30px;background:#ffffff;
+  border-bottom:1px solid #d4d7da;
+  display:flex;align-items:center;padding:0 16px;gap:6px;
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:12px;color:#6b7280;flex-shrink:0;
+}
+.enm-bread-link{color:#0082f0;cursor:pointer;}
+.enm-bread-link:hover{text-decoration:underline;}
+.enm-bread-sep{color:#9ca3af;}
+
+/* Body split: left tree + right actions */
+.enm-body{flex:1;display:flex;overflow:hidden;}
+
+/* Left panel */
+.enm-left{
+  flex:1;display:flex;flex-direction:column;
+  overflow:hidden;border-right:1px solid #d4d7da;
+  background:#fff;
+}
+
+/* Tree header */
+.enm-tree-hdr{
+  padding:14px 16px 10px;
+  border-bottom:1px solid #e5e8eb;
+  display:flex;align-items:flex-start;
+  justify-content:space-between;gap:12px;
+  flex-shrink:0;background:#fff;
+}
+.enm-tree-h2{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:18px;font-weight:400;
+  color:#111827;margin:0;line-height:1.2;
+}
+.enm-tree-btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.enm-tbtn{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;color:#111827;
+  background:#fff;border:1px solid #c2c7cd;
+  border-radius:3px;padding:4px 10px;
+  cursor:pointer;white-space:nowrap;
+}
+.enm-tbtn:hover{background:#f0f4f8;}
+
+/* Toolbar */
+.enm-toolbar{
+  height:34px;background:#f5f6f7;
+  border-bottom:1px solid #d4d7da;
+  display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;
+}
+.enm-toolbar-l{display:flex;align-items:center;gap:8px;flex:1;}
+.enm-sel-net{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;color:#111827;
+  background:#fff;border:1px solid #c2c7cd;
+  border-radius:3px;padding:2px 6px;cursor:pointer;
+}
+.enm-sel-count{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;color:#6b7280;
+}
+.enm-refresh-btn{
+  font-size:15px;color:#6b7280;
+  background:transparent;border:none;cursor:pointer;
+  padding:3px 6px;border-radius:3px;
+}
+.enm-refresh-btn:hover{background:#e5e8eb;color:#111827;}
+
+/* Tree rows container */
+.enm-tree{flex:1;overflow-y:auto;background:#fff;}
+
+/* Individual row */
+.enm-row{
+  height:34px;display:flex;align-items:center;gap:4px;
+  padding:0 12px;
+  border-bottom:1px solid #f2f2f2;
+  cursor:pointer;user-select:none;
+}
+.enm-row:hover{background:#e8f1fb;}
+.enm-row-parent{background:#f8f9fa;}
+.enm-row-parent:hover{background:#e8f1fb;}
+.enm-row-site{padding-left:26px;}
+.enm-row-sel,.enm-row-sel:hover{background:#cce0fb;}
+
+.enm-row-cb{
+  width:14px;height:14px;margin-right:2px;
+  accent-color:#0082f0;flex-shrink:0;cursor:pointer;
+}
+.enm-expand{
+  font-size:10px;color:#6b7280;
+  width:14px;flex-shrink:0;text-align:center;
+}
+.enm-expand-coll{color:#9ca3af;}
+
+/* Node icons (conic half-circles) */
+.enm-icon{
+  width:16px;height:16px;border-radius:50%;flex-shrink:0;
+}
+.enm-icon-net{background:conic-gradient(#374151 50%,#d1d5db 50%);}
+.enm-icon-me {background:conic-gradient(#0082f0 50%,#bfdbfe 50%);}
+
+.enm-node{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:12px;color:#111827;
+  flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.enm-badge{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:10px;color:#6b7280;
+  background:#f3f4f6;border:1px solid #e5e7eb;
+  border-radius:3px;padding:1px 6px;
+  white-space:nowrap;flex-shrink:0;
+}
+.enm-badge-4g{
+  background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;
+}
+
+/* Filter row inside LTE */
+.enm-filter-row{
+  padding:5px 28px;background:#f9fafb;
+  border-bottom:1px solid #e5e7eb;
+}
+.enm-filter-inp{
+  width:100%;
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;color:#111827;
+  background:#fff;border:1px solid #c2c7cd;
+  border-radius:3px;padding:3px 8px;outline:none;
+}
+.enm-filter-inp:focus{border-color:#0082f0;}
+
+/* Right panel — actions */
+.enm-right{
+  width:262px;flex-shrink:0;
+  overflow-y:auto;background:#fff;
+  padding:14px 14px 20px;
+  display:flex;flex-direction:column;gap:10px;
+  border-left:1px solid #d4d7da;
+}
+.enm-act-hdr{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:13px;font-weight:600;color:#111827;
+  margin-bottom:2px;
+}
+.enm-field{display:flex;flex-direction:column;gap:4px;}
+.enm-field-lbl{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:10px;letter-spacing:0.08em;
+  text-transform:uppercase;color:#6b7280;
+}
+.enm-field-inp{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:12px;color:#111827;
+  background:#fff;border:1px solid #c2c7cd;
+  border-radius:3px;padding:5px 8px;
+  width:100%;outline:none;
+}
+.enm-field-inp:focus{border-color:#0082f0;}
+
+.enm-save-btn{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:12px;background:#0082f0;color:#fff;
+  border:none;border-radius:3px;padding:6px 16px;
+  cursor:pointer;align-self:flex-start;
+}
+.enm-save-btn:hover{background:#006dd1;}
+
+.enm-sel-val{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:13px;color:#111827;font-weight:500;
+  min-height:20px;word-break:break-all;
+}
+
+.enm-amos-btn{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:12px;background:#0082f0;color:#fff;
+  border:none;border-radius:3px;padding:8px 0;
+  cursor:pointer;width:100%;text-align:center;
+}
+.enm-amos-btn:hover{background:#006dd1;}
+
+.enm-cmds-row{
+  display:flex;align-items:center;
+  justify-content:space-between;margin-top:2px;
+}
+.enm-add-btn{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;color:#0082f0;
+  background:transparent;border:1px solid #0082f0;
+  border-radius:3px;padding:2px 8px;cursor:pointer;
+}
+.enm-add-btn:hover{background:#eff6ff;}
+
+/* Select all / Deselect all row */
+.enm-selall-row{
+  display:flex;align-items:center;gap:4px;
+  margin-bottom:2px;
+}
+.enm-selall-btn{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:10px;color:#0082f0;
+  background:transparent;border:none;
+  padding:0;cursor:pointer;text-decoration:underline;
+}
+.enm-selall-btn:hover{color:#006dd1;}
+.enm-selall-sep{font-size:10px;color:#9ca3af;}
+
+/* Command checklist */
+.enm-cmd-list{
+  display:flex;flex-direction:column;gap:3px;
+  max-height:220px;overflow-y:auto;
+}
+.enm-cmd-item{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 5px;
+  border:1px solid #e5e7eb;border-radius:3px;
+  background:#f9fafb;
+}
+.enm-cmd-lbl{display:flex;align-items:center;cursor:pointer;flex-shrink:0;}
+.enm-cmd-chk{display:none;}
+.enm-chk-box{
+  width:14px;height:14px;
+  border:1.5px solid #c2c7cd;border-radius:2px;
+  background:#fff;display:block;flex-shrink:0;
+  position:relative;
+}
+.enm-cmd-chk:checked + .enm-chk-box{
+  background:#0082f0;border-color:#0082f0;
+}
+.enm-cmd-chk:checked + .enm-chk-box::after{
+  content:'✓';
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:9px;line-height:1;
+}
+.enm-cmd-name{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;color:#111827;
+  flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.enm-cmd-code{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:9.5px;color:#6b7280;
+  background:#e5e7eb;border-radius:2px;padding:1px 4px;flex-shrink:0;
+}
+.enm-cmd-del{
+  font-size:14px;color:#9ca3af;
+  background:transparent;border:none;cursor:pointer;
+  padding:0 2px;line-height:1;flex-shrink:0;
+}
+.enm-cmd-del:hover{color:#e05050;}
+
+.enm-run-btn{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:12px;background:#16843a;color:#fff;
+  border:none;border-radius:3px;padding:8px 0;
+  cursor:pointer;width:100%;text-align:center;margin-top:2px;
+}
+.enm-run-btn:hover{background:#125c2b;}
+
+.enm-status{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;padding:5px 8px;border-radius:3px;
+}
+.enm-status-ok  {background:#f0fdf4;color:#16843a;border:1px solid #bbf7d0;}
+.enm-status-warn{background:#fff7ed;color:#b45309;border:1px solid #fed7aa;}
+.enm-status-info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+
+/* Macro output overlay */
+#enmMacroOverlay{
+  position:fixed;inset:0;z-index:9500;
+  background:rgba(0,0,0,0.56);
+  display:none;
+  align-items:center;justify-content:center;
+}
+.enm-macro-box{
+  width:min(820px,92vw);height:min(600px,84vh);
+  background:#0d0d0d;border-radius:8px;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,0.5);
+}
+.enm-macro-hdr{
+  height:36px;background:#202425;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:11px;color:#8a9099;
+}
+.enm-macro-dots{display:flex;gap:6px;align-items:center;}
+.enm-mac-dot{
+  width:12px;height:12px;border-radius:50%;cursor:pointer;
+}
+.enm-mac-red{background:#ff5f57;}
+.enm-mac-ylw{background:#ffbd2e;}
+.enm-mac-grn{background:#28c840;}
+.enm-macro-title{font-size:11px;color:#8a9099;}
+.enm-macro-out{
+  flex:1;overflow:auto;margin:0;
+  padding:14px;
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:12px;color:#a3e635;
+  white-space:pre-wrap;word-break:break-all;
+  line-height:1.55;background:#0d0d0d;
+}
+
+/* Add command dialog */
+#slcAddDialog{
+  position:fixed;inset:0;z-index:9600;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  align-items:center;justify-content:center;
+}
+.enm-dlg{
+  width:min(380px,90vw);background:#fff;
+  border-radius:6px;padding:24px;
+  display:flex;flex-direction:column;gap:14px;
+  box-shadow:0 4px 24px rgba(0,0,0,0.22);
+}
+.enm-dlg-hdr{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:14px;font-weight:600;color:#111827;
+}
+.enm-dlg-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:2px;}
+.enm-dlg-cancel{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:12px;color:#6b7280;
+  background:transparent;border:1px solid #c2c7cd;
+  border-radius:3px;padding:6px 14px;cursor:pointer;
+}
+.enm-dlg-cancel:hover{background:#f3f4f6;}
+.enm-dlg-ok{
+  font-family:'JetBrains Mono','Consolas',monospace;
+  font-size:12px;color:#fff;
+  background:#0082f0;border:none;
+  border-radius:3px;padding:6px 14px;cursor:pointer;
+}
+.enm-dlg-ok:hover{background:#006dd1;}

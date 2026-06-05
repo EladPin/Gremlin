@@ -92,6 +92,7 @@
   function dismiss() {
     const splash = document.getElementById('splashScreen');
     if (splash) splash.classList.add('hidden');
+    if (typeof window.onSplashDone === 'function') window.onSplashDone();
   }
 
   if (document.readyState === 'loading') {
