@@ -87,7 +87,7 @@ while ($listener.IsListening) {
                 # then clears and dumps the full output so engineer can read it.
                 $bat  = "@echo off`r`n"
                 $bat += "title GREMLIN - $site`r`n"
-                $bat += "color 0A`r`n"
+                $bat += "color 07`r`n"
                 $bat += "echo ====================================`r`n"
                 $bat += "echo  GREMLIN - Noise Floor Analysis`r`n"
                 $bat += "echo  Site: $site`r`n"
@@ -171,7 +171,7 @@ while ($listener.IsListening) {
                 $tmpBat = Join-Path ([IO.Path]::GetTempPath()) "gremlin_amos_$rand.bat"
                 $bat    = "@echo off`r`n"
                 $bat   += "title GREMLIN AMOS -- $site`r`n"
-                $bat   += "color 0A`r`n"
+                $bat   += "color 07`r`n"
                 $bat   += "`"$plink`" -ssh -t -pw `"$sshPass`" -l `"$sshUser`" `"$sshHost`" `"amos $site`"`r`n"
                 $bat   += "del `"%~f0`" 2>nul`r`n"
                 [IO.File]::WriteAllText($tmpBat, $bat, [Text.Encoding]::ASCII)
@@ -193,10 +193,8 @@ while ($listener.IsListening) {
         }
         # ─────────────────────────────────────────────────────────────────────
 
-        # ── POST /enm/macro — site-check commands in visible CMD window ────────
-        # Same visible-window pattern as nfmos: plink runs in -batch mode piping
-        # commands via stdin; CMD window shows "Running…" then dumps output.
-        # Returns {ok:true} immediately after launching — does not wait.
+        # ── POST /enm/macro — site-check commands: one hidden plink session per site ──
+        # Returns {ok, site, output}. Always hidden — no visible CMD window.
         if ($path -eq 'enm/macro' -and $req.HttpMethod -eq 'POST') {
             $res.ContentType = 'application/json'
             $res.Headers.Add('Access-Control-Allow-Origin', '*')
@@ -226,39 +224,39 @@ while ($listener.IsListening) {
                 $tmpDir  = [IO.Path]::GetTempPath()
                 $tmpCmds = Join-Path $tmpDir "gremlin_mc_$rand.txt"
                 $tmpOut  = Join-Path $tmpDir "gremlin_mo_$rand.txt"
+                $tmpDone = Join-Path $tmpDir "gremlin_md_$rand.txt"
                 $tmpBat  = Join-Path $tmpDir "gremlin_mb_$rand.bat"
 
                 [IO.File]::WriteAllText($tmpCmds, $amosCmds, [Text.Encoding]::ASCII)
 
-                # Visible CMD window: shows banner → runs plink → dumps output → waits
+                # Always hidden — output returned via JSON
                 $bat  = "@echo off`r`n"
-                $bat += "title GREMLIN Site Check -- $site`r`n"
-                $bat += "color 0A`r`n"
-                $bat += "echo ====================================`r`n"
-                $bat += "echo  GREMLIN - Site Check`r`n"
-                $bat += "echo  Site: $site`r`n"
-                $bat += "echo ====================================`r`n"
-                $bat += "echo.`r`n"
-                $bat += "echo  Running AMOS commands... please wait`r`n"
-                $bat += "echo.`r`n"
                 $bat += "`"$plink`" -ssh -t -batch -pw `"$sshPass`" -l `"$sshUser`" `"$sshHost`" < `"$tmpCmds`" > `"$tmpOut`" 2>&1`r`n"
-                $bat += "cls`r`n"
-                $bat += "type `"$tmpOut`"`r`n"
-                $bat += "echo.`r`n"
-                $bat += "echo ====================================`r`n"
-                $bat += "echo  Done - press any key to close`r`n"
-                $bat += "echo ====================================`r`n"
-                $bat += "pause >nul`r`n"
+                $bat += "echo 1 > `"$tmpDone`"`r`n"
                 $bat += "del `"$tmpCmds`" 2>nul`r`n"
-                $bat += "del `"$tmpOut`" 2>nul`r`n"
                 $bat += "del `"%~f0`" 2>nul`r`n"
                 [IO.File]::WriteAllText($tmpBat, $bat, [Text.Encoding]::ASCII)
 
-                # Launch visible window and return immediately (don't wait)
                 $cmdArgs = '/C ""{0}""' -f $tmpBat
-                Start-Process -FilePath 'cmd.exe' -ArgumentList $cmdArgs -WindowStyle Normal
+                Start-Process -FilePath 'cmd.exe' -ArgumentList $cmdArgs -WindowStyle Hidden
 
-                $okBytes = [Text.Encoding]::UTF8.GetBytes('{"ok":true}')
+                # Poll for done sentinel (120s timeout)
+                $deadline = [DateTime]::Now.AddSeconds(120)
+                while ([DateTime]::Now -lt $deadline) {
+                    if (Test-Path $tmpDone) { Start-Sleep -Milliseconds 300; break }
+                    Start-Sleep -Milliseconds 500
+                }
+
+                $stdout = ''
+                if (Test-Path $tmpOut) {
+                    try { $stdout = [IO.File]::ReadAllText($tmpOut, [Text.Encoding]::UTF8) } catch {}
+                }
+                try { [IO.File]::Delete($tmpDone) } catch {}
+                try { [IO.File]::Delete($tmpOut)  } catch {}
+
+                $okObj   = [PSCustomObject]@{ ok = $true; site = $site; output = $stdout }
+                $okJson  = $okObj | ConvertTo-Json -Compress -Depth 3
+                $okBytes = [Text.Encoding]::UTF8.GetBytes($okJson)
                 $res.StatusCode = 200; $res.ContentLength64 = $okBytes.Length
                 $res.OutputStream.Write($okBytes, 0, $okBytes.Length)
             } catch {
@@ -288,6 +286,9 @@ while ($listener.IsListening) {
             $res.ContentType = $mime
             $res.StatusCode  = 200
             $res.Headers.Add('Access-Control-Allow-Origin', '*')
+            if ($mime -match 'javascript|css') {
+                $res.Headers.Add('Cache-Control', 'no-store')
+            }
             $res.ContentLength64 = $bytes.Length
             $res.OutputStream.Write($bytes, 0, $bytes.Length)
         } else {

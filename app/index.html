@@ -54,7 +54,7 @@
   <div class="enm-nav">
     <div class="enm-nav-l">
       <div class="enm-e">E</div>
-      <span class="enm-brand">Ericsson Network Manager</span>
+      <span class="enm-brand">Elad's Network Manager</span>
     </div>
     <div class="enm-nav-r">
       <span class="enm-chip">enm01</span>
@@ -69,7 +69,7 @@
 
   <!-- Breadcrumb bar -->
   <div class="enm-bread">
-    <span class="enm-bread-link">Ericsson Network Manager</span>
+    <span class="enm-bread-link">Elad's Network Manager</span>
     <span class="enm-bread-sep">/</span>
     <span>Topology Browser</span>
   </div>
@@ -90,7 +90,7 @@
       <div class="enm-toolbar">
         <div class="enm-toolbar-l">
           <select class="enm-sel-net"><option>Network Data</option></select>
-          <span class="enm-sel-count">| Selected (0)</span>
+          <span class="enm-sel-count" id="enmSelCount">| Selected (0)</span>
         </div>
         <button class="enm-refresh-btn" title="Refresh">&#8635;</button>
       </div>
@@ -123,7 +123,7 @@
       <div class="enm-field-lbl" style="margin-top:8px">SELECTED SITE</div>
       <div class="enm-sel-val" id="enmSelSite">—</div>
 
-      <button class="enm-amos-btn" onclick="enmOpenAmos()">Run AMOS</button>
+      <button class="enm-amos-btn" onclick="enmOpenAmos()">Run AMOS <span class="enm-kbd">Ctrl+B</span></button>
 
       <div class="enm-cmds-row">
         <span class="enm-field-lbl">SITE CHECK COMMANDS</span>
@@ -138,6 +138,12 @@
       <div class="enm-cmd-list" id="enmCmdList"></div>
 
       <button class="enm-run-btn" onclick="enmRunCheck()">Run Site Check</button>
+      <button class="enm-lastres-btn" id="enmLastResultsBtn" disabled onclick="enmShowLastResults()">Last Results</button>
+
+      <div class="enm-progress-wrap" id="enmProgressWrap" style="display:none">
+        <div class="enm-progress-track"><div class="enm-progress-fill" id="enmProgressFill"></div></div>
+        <div class="enm-progress-label" id="enmProgressStatus"></div>
+      </div>
 
       <div class="enm-status" id="enmStatus" style="display:none"></div>
     </div>
@@ -157,6 +163,56 @@
         <div style="width:60px"></div>
       </div>
       <pre class="enm-macro-out" id="enmMacroOutput"></pre>
+    </div>
+  </div>
+
+  <!-- Site Check Results overlay -->
+  <div id="siteResultsOverlay"
+       onclick="if(event.target===this)enmCloseResults()">
+    <div class="enm-results-modal">
+      <div class="enm-results-hdr">
+        <div class="enm-results-dots">
+          <span class="enm-mac-dot enm-mac-red" onclick="enmCloseResults()"></span>
+          <span class="enm-mac-dot enm-mac-ylw"></span>
+          <span class="enm-mac-dot enm-mac-grn"></span>
+        </div>
+        <span class="enm-results-site" id="enmResultsSite">—</span>
+        <div class="enm-results-nav" id="enmResultsNav" style="display:none">
+          <button class="enm-results-nav-btn" id="enmResultsPrev" onclick="enmResultsNav(-1)">&#8592; Prev</button>
+          <span class="enm-results-nav-count" id="enmResultsCount">1 / 1</span>
+          <button class="enm-results-nav-btn" id="enmResultsNext" onclick="enmResultsNav(1)">Next &#8594;</button>
+        </div>
+        <button class="enm-results-close" onclick="enmCloseResults()" title="Close (Esc)">&#10005;</button>
+      </div>
+      <div class="enm-results-toolbar">
+        <span class="enm-results-toolabel">Site Check Results</span>
+        <button class="enm-results-rawtoggle" id="enmRawToggle" onclick="enmToggleRaw()">Show Raw Output</button>
+      </div>
+      <div class="enm-results-body" id="enmResultsBody"></div>
+      <div class="enm-results-raw" id="enmResultsRaw">
+        <pre class="enm-results-raw-pre" id="enmResultsRawPre"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Sites dialog -->
+  <div id="siteManageDialog" style="display:none"
+       onclick="if(event.target===this)enmCloseSiteManage()">
+    <div class="enm-dlg enm-dlg-sites">
+      <div class="enm-dlg-hdr">Manage Sites</div>
+      <div class="enm-field">
+        <div class="enm-field-lbl">ADD CUSTOM SITE</div>
+        <div class="enm-site-add-row">
+          <input type="text" class="enm-field-inp" id="siteAddInp"
+                 placeholder="e.g. NewSite_01" autocomplete="off" spellcheck="false">
+          <button class="enm-dlg-ok" onclick="enmConfirmAddSite()">Add</button>
+        </div>
+      </div>
+      <div class="enm-field-lbl">CUSTOM SITES</div>
+      <div class="enm-site-custom-list" id="siteCustomList"></div>
+      <div class="enm-dlg-btns">
+        <button class="enm-dlg-cancel" onclick="enmCloseSiteManage()">Close</button>
+      </div>
     </div>
   </div>
 
@@ -262,7 +318,10 @@
       <div class="sb-status" id="sbStatus"></div>
 
       <div class="sb-section" style="margin-top:20px;">
-        <div class="sb-label">History</div>
+        <div class="sb-label" style="display:flex;align-items:center;justify-content:space-between;">
+          History
+          <button class="sb-clear-btn" onclick="clearHistory()">Clear</button>
+        </div>
         <div id="histList"><div class="sb-hist-empty">No runs yet</div></div>
       </div>
 

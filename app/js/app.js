@@ -1233,6 +1233,16 @@ function selectHistory(idx) {
   _activeIdx = idx; _renderHistory(); _showResult(_history[idx]);
 }
 
+function clearHistory() {
+  _history   = [];
+  _activeIdx = -1;
+  _cmpEntry  = null;
+  try { localStorage.removeItem(LS_HIST); } catch(e) {}
+  _renderHistory();
+  const banner = document.getElementById('cmpBanner');
+  if (banner) banner.style.display = 'none';
+}
+
 // ── history persistence ───────────────────────────────────────
 function _saveHistory() {
   try {
