@@ -280,6 +280,7 @@ while ($listener.IsListening) {
                 '.js'   { 'application/javascript' }
                 '.css'  { 'text/css' }
                 '.woff2'{ 'font/woff2' }
+                '.svg'  { 'image/svg+xml' }
                 default { 'application/octet-stream' }
             }
             $bytes = [IO.File]::ReadAllBytes($file)
