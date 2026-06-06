@@ -1,4 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#0b0b0b"/>
-  <text x="16" y="23" font-family="serif" font-size="22" font-weight="400" fill="#f0ede9" text-anchor="middle">G</text>
+  <!-- dark bg -->
+  <rect width="32" height="32" rx="7" fill="#0f0f0f"/>
+
+  <!-- signal bars (RF theme) -->
+  <rect x="4"  y="22" width="3" height="4"  rx="1" fill="#0082f0" opacity="0.4"/>
+  <rect x="9"  y="18" width="3" height="8"  rx="1" fill="#0082f0" opacity="0.6"/>
+  <rect x="14" y="13" width="3" height="13" rx="1" fill="#0082f0" opacity="0.8"/>
+  <rect x="19" y="8"  width="3" height="18" rx="1" fill="#0082f0"/>
+
+  <!-- G lettermark top-right -->
+  <text x="29" y="11" font-family="serif" font-size="10" font-weight="700" fill="#f0ede9" text-anchor="end" opacity="0.9">G</text>
 </svg>
