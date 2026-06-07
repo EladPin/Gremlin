@@ -13,7 +13,7 @@ Connects to the AMOS MO shell via SSH (plink), runs the `NF.mos` script and `pmr
 - **Per-PRB interference chart** (line chart, dBm vs PRB index — snapshot)
 - **PMR 206 ROP-by-ROP trend charts** — interference power + UL BLER/DTX + SINR + UL PRB load + RRC SSR + DL rank over time
 - **Auto-diagnosis** — Hebrew-language issue cards in a terminal card, each with a jump-to-chart button
-- **Site info modal** — earfcn (DL), bandwidth, CRS gain, active UE count per cell
+- **Site info modal** — earfcn (DL), bandwidth, MHz from `stzr`, CRS gain, active UE count per cell
 - **Raw AMOS terminal viewer** — `>_` button on PRB chart opens a terminal modal with the full SSH session output
 - **Run history** — persisted to localStorage, shows last N runs with compare and re-load
 - **Side-by-side comparison** — overlay a previous run's data on current charts (dimmed/dashed)
@@ -27,7 +27,7 @@ ENM-style topology browser for running quick AMOS site checks:
 - **Actions panel** — HOST, AMOS USER, AMOS PASSWORD fields; Save persists to storage; SELECTED SITE count display
 - **Run AMOS button** (`Ctrl+B`) — launches plink in a **PowerShell** window (black bg, green fg, ANSI-enabled via Win32 SetConsoleMode API). Disabled if more than 1 site selected.
 - **Site Check Commands checklist** — per-command checkboxes with Select All / Deselect All; custom commands added via `+ Add` dialog; all state persists to localStorage
-- **Run Site Check button** — runs one hidden plink session per selected site (max 5), collects output, displays in **results overlay** with per-command cards and raw output toggle; auto-dismissed 3-second warning if >5 sites selected
+- **Run Site Check button** (`Ctrl+R`) — runs one hidden plink session per selected site (max 5), collects output, displays in **results overlay** with per-command cards and raw output toggle; auto-dismissed 3-second warning if >5 sites selected
 - **Results overlay** (`#siteResultsOverlay`) — fade-in overlay with per-site cards; each command card expandable with animation; raw output toggle per site; ESC or X button closes; "Last Results" button reopens last run
 - **Progress bar** — shows connecting/running/reading status during Run Site Check
 
@@ -120,7 +120,7 @@ Script load order in index.html matters:
   .enm-bread        — breadcrumb bar (white, border-bottom)
   .enm-body         — flex row
     .enm-left       — topology tree (flex:1, scrollable)
-      .enm-tree-hdr — "Elad's Network Manager" h2 + action buttons
+      .enm-tree-hdr — "Topology Browser" h2 (no action buttons — removed)
       .enm-toolbar  — Network Data dropdown + Selected count + refresh
       #enmTree      — tree rows built by JS (includes select-all row inside #enmLteBody)
     .enm-right      — actions panel (260px, scrollable)
@@ -143,7 +143,7 @@ All Zira/ENM CSS uses **fixed hex values** (not CSS custom properties like `var(
 
 ### Topology tree
 - Three root nodes: `5G` (collapsed stub), `ONRM_ROOT_MO` (collapsed stub), `LTE` (expandable)
-- LTE expanded by default — shows a filter `<input>`, then a Select All / Deselect All row, then all `ENM_SITES` as site rows
+- LTE expanded by default — shows a filter `<input>` (34px tall, 13px font, blue glow on focus), then a Select All / Deselect All row, then all `ENM_SITES` as site rows
 - Filter (`#enmTreeFilter`) re-renders site rows live via `enmFilterTree(val)` → `_renderSites(val)`
 - Site rows use `.enm-chk-wrap` label checkboxes (blue fill when checked, 15px)
 - Site row click → `enmSelectSite(name)` → toggles in `_selSites` (a `Set`), calls `_syncSelUI()`, re-renders rows
@@ -179,6 +179,10 @@ Save button (`enmSave()`) writes all three to storage. Password is sessionStorag
 - Server returns `{ok:true}` immediately
 - Button shows `Ctrl+B` keyboard hint via `.enm-kbd` span
 
+### Run Site Check button (`Ctrl+R`)
+- `Ctrl+R` keyboard shortcut added — fires `enmRunCheck()`, same guard as `Ctrl+B` (ignored in input/textarea, only when Zira mode visible)
+- Button shows `Ctrl+R` hint via `.enm-kbd` span
+
 ### Site Check Commands
 - Default commands: `lt all`, `st cell`, `st mme`, `st ike`, `get . earfcn`, `al`, `ue print -admitted`, `get . bandwidth`, `get . crsgain`, `syn status`
 - Persisted to `localStorage gremlin_slc_commands` as `[{name, cmd, on}]`
@@ -203,6 +207,7 @@ Save button (`enmSave()`) writes all three to storage. Password is sessionStorag
 - Raw output toggle button per site (shows/hides full plink stdout)
 - X button + ESC key closes overlay (`enmCloseResults()`)
 - `_keysReady` module-level flag prevents duplicate keyboard event listener registration
+- **No status icons on command cards** — the `enm-rcard-status` badge (✓/!/✗) was removed because the app cannot reliably determine pass/fail for all AMOS commands. Cards show command name and output only.
 
 ### Output parser (`_parseOutput` in zira.js)
 CRITICAL — two regex fixes confirmed in production:
@@ -277,6 +282,7 @@ NF.mos does `lt all` **internally** — do NOT send `lt all` before it.
 amos {site}
 run NF.mos       ← runs lt all internally, outputs PRB table + avg summary
 st cell
+stzr             ← LTE cell table: dlBW (MHz), arfcnDL, UEs, band, etc. per cell
 get . earfcn
 get . bandwidth
 get . crsgain
@@ -353,6 +359,33 @@ Each ROP = 15 minutes. Typically last 1–4h available on node.
 5. **RRC Setup Success Rate** — % per ROP
 6. **Cell Availability** — downtime minutes per ROP (hidden if all zero)
 7. **DL TX Rank Distribution** — Rank 1% (solid) + Rank 2% (dashed)
+
+---
+
+## stzr output format
+
+`stzr` (LTE cell status with radio parameters) — run after `st cell` in RF mode. Produces a table of all LTE cells on the node.
+
+```
+Id LTECell           S TABREMDF Alm UEs cId tac pci rsi arfcnDL arfcnUL freqDL freqUL dlBW ulBW Band ...
+ 1 FDD=Nabi_El_Awadi_1 1 --------- -  21   1   8 216 359   9235   27235  760.5  705.5    5    5   28 ...
+ 2 FDD=Nabi_El_Awadi_2 1 --------- -   7   2   8 217 374   9335   27335  770.5  715.5    5    5   28 ...
+```
+
+**Key columns:**
+- `LTECell` — cell name prefixed with `FDD=`; parser strips the prefix to match against cell names from `st cell`
+- `dlBW` — DL channel bandwidth in **MHz** (integer, already in MHz — no conversion needed)
+- `arfcnDL` — DL EARFCN
+- `UEs` — active UE count
+
+**Parser (`_parseStzr` in parser.js):**
+- Finds header line by detecting `dlBW` keyword
+- Locates `LTECell` and `dlBW` column positions dynamically from header
+- Strips `FDD=` prefix from cell name, stores `dlBW` as `siteInfo[cell].dlBW`
+- Stops at `Total:` line
+- Called both in prompt-block mode and fallback scan mode
+
+**Site info modal columns (left → right):** Cell | Status | EARFCN | BW (from `get . bandwidth`, converted ÷1000 to MHz) | MHz (stzr) | CRS Gain | UEs (admitted)
 
 ---
 

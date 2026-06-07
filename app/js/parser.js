@@ -218,6 +218,7 @@ const PARSER = (() => {
         const block = lines.slice(i + 1, j);
 
         if      (cmd === 'st cell')             _parseStCell(block, cells);
+        else if (cmd === 'stzr')               _parseStzr(block, cells);
         else if (cmd === 'get . earfcn')        _parseGetEarfcn(block, cells);
         else if (cmd === 'get . bandwidth')     _parseGetBandwidth(block, cells);
         else if (cmd === 'get . crsgain')       _parseGetCrsGain(block, cells);
@@ -233,6 +234,7 @@ const PARSER = (() => {
 
     // ── Fallback: no prompt echoes detected — scan output directly ──────────
     _parseStCell(lines, cells);
+    _parseStzr(lines, cells);
     _parseUePrint(lines, cells);
     _parseGetEarfcn(lines, cells);
     _parseGetBandwidth(lines, cells);
@@ -250,6 +252,39 @@ const PARSER = (() => {
       if (!cells[cell]) cells[cell] = {};
       cells[cell].admState = admState;
       cells[cell].opState  = opState;
+    }
+  }
+
+  // stzr table — extract dlBW (MHz) per cell
+  // Header line: "Id LTECell S TABREMDF Alm UEs cId tac pci rsi arfcnDL arfcnUL freqDL freqUL dlBW ulBW Band ..."
+  // Data lines: " 1 FDD=Nabi_El_Awadi_1 1 --------- - 21 1 8 216 359 9235 27235 760.5 705.5 5 5 28 ..."
+  // Cell name in LTECell column is "FDD=<name>" — we strip the "FDD=" prefix.
+  function _parseStzr(block, cells) {
+    let hdrIdx = -1;
+    let dlBwCol = -1;
+    let cellCol = -1;
+    for (let i = 0; i < block.length; i++) {
+      if (/\bdlBW\b/i.test(block[i])) {
+        hdrIdx = i;
+        const parts = block[i].trim().split(/\s+/);
+        cellCol  = parts.findIndex(p => /^LTECell$/i.test(p));
+        dlBwCol  = parts.findIndex(p => /^dlBW$/i.test(p));
+        break;
+      }
+    }
+    if (hdrIdx < 0 || dlBwCol < 0 || cellCol < 0) return;
+    for (let i = hdrIdx + 1; i < block.length; i++) {
+      const line = block[i].trim();
+      if (!line) continue;
+      if (/^Total:/i.test(line)) break;
+      const parts = line.split(/\s+/);
+      if (parts.length <= dlBwCol) continue;
+      const rawCell = parts[cellCol] || '';
+      const cell    = rawCell.replace(/^FDD=/i, '');
+      const bw      = parseFloat(parts[dlBwCol]);
+      if (!cell || isNaN(bw)) continue;
+      if (!cells[cell]) cells[cell] = {};
+      cells[cell].dlBW = bw;
     }
   }
 

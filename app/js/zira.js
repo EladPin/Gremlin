@@ -85,6 +85,13 @@
           e.preventDefault();
           if (_selSites.size === 1) enmOpenAmos();
         }
+        // Ctrl+R — run site check
+        if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+          const tag = (e.target.tagName || '').toLowerCase();
+          if (tag === 'input' || tag === 'textarea') return;
+          e.preventDefault();
+          enmRunCheck();
+        }
       });
     }
   }
@@ -321,7 +328,6 @@
     if (prev) prev.disabled = _resultIdx === 0;
     if (next) next.disabled = _resultIdx === _resultEntries.length - 1;
 
-    const icons = { ok: '✓', warn: '!', err: '✗', none: '—' };
     const parsed = _parseOutput(entry.output, entry.cmds)
       .filter(function (r) { return r.cmd.trim().toLowerCase() !== 'lt all'; });
     const body = document.getElementById('enmResultsBody');
@@ -331,7 +337,6 @@
         const hasOutput = r.output && r.output.trim();
         return '<div class="enm-rcard">' +
           '<div class="enm-rcard-hdr" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.enm-rcard-arrow\').classList.toggle(\'open\')">' +
-            '<div class="enm-rcard-status enm-rcard-' + r.status + '">' + icon + '</div>' +
             '<span class="enm-rcard-cmd">' + _esc(r.cmd) + '</span>' +
             '<span class="enm-rcard-arrow">' + (hasOutput ? '▼' : '') + '</span>' +
           '</div>' +

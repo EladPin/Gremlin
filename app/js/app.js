@@ -1032,11 +1032,13 @@ function _renderSiteInfo(parsed) {
     const crsNum  = parseFloat(d.crsGain);
     const crsDisp = d.crsGain != null && !isNaN(crsNum) ? (crsNum / 100).toFixed(2) + ' dB' : (d.crsGain != null ? d.crsGain : '—');
     const ue      = d.ueCount != null ? d.ueCount : '—';
+    const dlBW    = d.dlBW   != null ? d.dlBW + ' MHz' : '—';
     return `<tr>
       <td class="si-cell-name">${_esc(cell)}</td>
       <td>${badge}</td>
       <td>${_esc(d.earfcn || '—')}</td>
       <td>${_esc(bwDisp)}</td>
+      <td>${_esc(dlBW)}</td>
       <td>${_esc(crsDisp)}</td>
       <td>${_esc(String(ue))}</td>
     </tr>`;
@@ -1046,7 +1048,7 @@ function _renderSiteInfo(parsed) {
     <table class="si-table">
       <thead><tr>
         <th>Cell</th><th>Status</th><th>EARFCN</th><th>BW</th>
-        <th>CRS Gain</th><th>UEs (admitted)</th>
+        <th>MHz (stzr)</th><th>CRS Gain</th><th>UEs (admitted)</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;

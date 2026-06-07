@@ -1707,18 +1707,19 @@ html.light .sum-card{
 
 /* Filter row inside LTE */
 .enm-filter-row{
-  padding:5px 8px 5px 28px;background:#f9fafb;
+  padding:8px 10px 8px 28px;background:#f9fafb;
   border-bottom:1px solid #e5e7eb;
-  display:flex;align-items:center;gap:6px;
+  display:flex;align-items:center;gap:8px;
 }
 .enm-filter-inp{
   flex:1;min-width:0;
   font-family:'JetBrains Mono','Consolas',monospace;
-  font-size:11px;color:#111827;
+  font-size:13px;color:#111827;
   background:#fff;border:1px solid #c2c7cd;
-  border-radius:3px;padding:3px 8px;outline:none;
+  border-radius:5px;padding:7px 12px;outline:none;
+  height:34px;
 }
-.enm-filter-inp:focus{border-color:#0082f0;}
+.enm-filter-inp:focus{border-color:#0082f0;box-shadow:0 0 0 2px rgba(0,130,240,0.18);}
 
 /* Right panel — actions */
 .enm-right{
@@ -2217,7 +2218,7 @@ html.dark .enm-icon-me {background:conic-gradient(#0082f0 50%,#091c38 50%);}
 
 html.dark .enm-filter-row{background:#0d0d0d;border-color:#1e1e1e;}
 html.dark .enm-filter-inp{background:#151515;border-color:#2a2a2a;color:#cccccc;}
-html.dark .enm-filter-inp:focus{border-color:#0082f0;}
+html.dark .enm-filter-inp:focus{border-color:#0082f0;box-shadow:0 0 0 2px rgba(0,130,240,0.18);}
 html.dark .enm-sites-btn{color:#4da3ff;border-color:#4da3ff;}
 html.dark .enm-sites-btn:hover{background:#091c38;}
 

@@ -72,7 +72,7 @@ while ($listener.IsListening) {
                 # NF.mos runs lt all itself.
                 # After NF.mos, run pmr → choose report 206 → x to exit pmr menu.
                 # Unix LF only — PTY icrnl translates \r to \n, making \r\n become double-\n
-                $amosCmds = "amos $site`nrun NF.mos`nst cell`nget . earfcn`nget . bandwidth`nget . crsgain`nue print -admitted`npmr`n206`nx`nq`nexit`n"
+                $amosCmds = "amos $site`nrun NF.mos`nst cell`nstzr`nget . earfcn`nget . bandwidth`nget . crsgain`nue print -admitted`npmr`n206`nx`nq`nexit`n"
 
                 $rand    = [IO.Path]::GetRandomFileName() -replace '\.[^.]+$',''
                 $tmpDir  = [IO.Path]::GetTempPath()
